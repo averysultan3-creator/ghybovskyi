@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Переход в Telegram</title>
+    <script>
+        (function () {
+            var BOT_USERNAME = "stas_hrybovskyiP2Pbot";
+            var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+            function randomId() {
+                var bytes = new Uint8Array(10);
+                if (window.crypto && window.crypto.getRandomValues) {
+                    window.crypto.getRandomValues(bytes);
+                } else {
+                    for (var i = 0; i < bytes.length; i += 1) {
+                        bytes[i] = Math.floor(Math.random() * 255);
+                    }
+                }
+
+                var id = "c";
+                for (var j = 0; j < bytes.length; j += 1) {
+                    id += alphabet[bytes[j] % alphabet.length];
+                }
+                return id;
+            }
+
+            var params = new URLSearchParams(window.location.search);
+            var clickId = params.get("click_id") || randomId();
+            var target = "https://t.me/" + BOT_USERNAME + "?start=" + encodeURIComponent(clickId);
+            window.location.replace(target);
+        })();
+    </script>
+</head>
+<body>
+    <p>Переходим в Telegram...</p>
+</body>
+</html>

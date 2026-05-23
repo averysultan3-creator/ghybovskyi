@@ -1,0 +1,123 @@
+.green-button--telegram {
+    min-width: min(100%, 460px);
+    font-size: 1.125rem;
+    letter-spacing: 0;
+    box-shadow: 0 12px 70px 0 #0f5d3e, 0 0 12px 0 rgba(255,255,255,.55) inset;
+}
+
+.green-button--telegram.icon-left {
+    padding: .8125rem 3.75rem .8125rem .8125rem;
+}
+
+.green-button--telegram.icon-right {
+    padding: .8125rem .8125rem .8125rem 3.75rem;
+}
+
+.green-button--telegram .green-button__icon {
+    flex-basis: 4.5rem;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1rem;
+}
+
+.hero__labels {
+    flex-wrap: wrap;
+    row-gap: .625rem;
+}
+
+.hero__top .hero__labels {
+    max-width: 56rem;
+    margin: 0 auto;
+}
+
+.hero__rightside {
+    max-width: 21rem;
+}
+
+.course__lead,
+.course__note,
+.training-item p {
+    position: relative;
+    z-index: 2;
+    font-size: 1rem;
+    line-height: 150%;
+}
+
+.course__lead,
+.course__note {
+    color: rgba(22,22,22,.78);
+    text-align: center;
+}
+
+.training-item p {
+    color: rgba(255,255,255,.62);
+    letter-spacing: -.03em;
+}
+
+.course__content .green-button {
+    width: 100%;
+    color: #fff;
+}
+
+.program-item__content > ul li span {
+    line-height: 145%;
+}
+
+@media (max-width: 61.99875em) {
+    .hero__rightside {
+        max-width: 22rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 47.99875em) {
+    .green-button--telegram {
+        min-width: min(100%, 25rem);
+        font-size: 1rem;
+    }
+
+    .green-button--telegram.icon-left {
+        padding: .75rem 1.25rem .75rem .75rem;
+    }
+
+    .green-button--telegram.icon-right {
+        padding: .75rem .75rem .75rem 1.25rem;
+    }
+
+    .green-button--telegram .green-button__icon {
+        flex-basis: 4rem;
+        width: 4rem;
+        height: 4rem;
+    }
+
+    .course__lead,
+    .course__note,
+    .training-item p {
+        font-size: .9375rem;
+    }
+}
+
+@media (max-width: 29.99875em) {
+    .hero__content {
+        min-height: 100svh;
+        height: auto;
+        padding-bottom: 2rem;
+    }
+
+    .hero__bottom {
+        row-gap: 1.125rem;
+    }
+
+    .hero__middle {
+        font-size: 2.05rem;
+    }
+
+    .hero__rightside {
+        max-width: 19rem;
+    }
+
+    .hero-label {
+        width: min(100%, 20rem);
+        justify-content: center;
+    }
+}

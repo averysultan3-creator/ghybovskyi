@@ -1,0 +1,133 @@
+/*
+Theme Name: grybovsky
+Theme URI: https://fudzimaru.com/
+Version: 1.0
+Description:
+Author: fudzimaru
+Author URI: https://fudzimaru.com/
+*/
+
+.result-item:nth-child(1) .result-item__image img,
+.result-item:nth-child(2) .result-item__image img,
+.result-item:nth-child(3) .result-item__image img{
+    left: 45px;
+}
+
+@media (max-width: 47.9988em) {
+    .result-item:nth-child(1) .result-item__image img, .result-item:nth-child(2) .result-item__image img{
+        left: 20px;
+        transform: scale(1.85);
+    }
+    .result-item:nth-child(3) .result-item__image img{
+        left: 20px;
+        transform: scale(1.15);
+    }
+
+}
+
+
+.program-item__image img{
+    filter: blur(3px);
+}
+@media (max-width: 29.9988em) {
+    .program-item__label {
+        margin-bottom: -12px;
+    }
+}
+
+@media (max-width: 29.9988em) {
+
+
+    .training__body .title span{
+        display: inline-block;
+        margin-top: 7px;
+    }
+
+    .footer__wrapper{
+        text-align: center;
+    }
+}
+
+
+@media (max-width: 47.9988em) {
+    .footer__wrapper:first-child {
+        grid-template-columns: repeat(1, 1fr);
+        align-items: center;
+        row-gap: 1.875rem;
+        -webkit-column-gap: 0;
+        -moz-column-gap: 0;
+        column-gap: 0;
+    }
+}
+
+@media (max-width: 47.9988em) {
+    .faq-image-2 {
+        top: -6.25rem;
+        height: 18.75rem;
+    }
+
+    .faq-image-2 {
+        transform: scale(2.7);
+    }
+}
+
+
+@media (max-width: 47.9988em) {
+    .footer__leftside {
+        justify-self: center;
+    }
+}
+
+.program-item__image img{
+    z-index: 1;
+}
+
+.program-item__image svg{
+    z-index: 2;
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    left: 53%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@media (max-width: 61.9988em) {
+    .result-item__content {
+        font-size: 1.5rem;
+    }
+}
+
+.content{
+    padding-top: 100px;
+}
+.content h1,
+.content h2{
+    font-size: 35px;
+    line-height: 40px;
+    letter-spacing: 0.2px;
+    margin: 10px 0;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.content p{
+     line-height: 1.5;
+}
+
+@media (max-width: 47.9988em) {
+    .content{
+        padding-top: 50px;
+    }
+    .content h1,
+    .content h2{
+        font-size: 24px;
+    }
+}
+
+.footer__pages{
+    color:#f6e7c5;
+}
+.footer__pages a{
+    border-bottom: dashed;
+}
