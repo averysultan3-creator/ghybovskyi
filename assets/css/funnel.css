@@ -4,6 +4,9 @@
     letter-spacing: 0;
     box-shadow: 0 12px 70px 0 #0f5d3e, 0 0 12px 0 rgba(255,255,255,.55) inset;
     justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 0;
 }
 
 html,
@@ -82,6 +85,10 @@ svg {
     display: none;
 }
 
+.green-button--telegram span:last-child {
+    white-space: normal;
+}
+
 .hero__labels {
     flex-wrap: wrap;
     row-gap: .625rem;
@@ -121,6 +128,19 @@ svg {
     color: #fff;
 }
 
+.swiper-button-prev,
+.swiper-button-next {
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+.hero picture img,
+.for-who-item__image img,
+.training-item__image img,
+.review-item__avatar img {
+    display: block;
+}
+
 .program-item__content > ul li span {
     line-height: 145%;
 }
@@ -136,6 +156,7 @@ svg {
     .green-button--telegram {
         min-width: min(100%, 25rem);
         font-size: 1rem;
+        box-shadow: 0 10px 40px 0 rgba(15,93,62,.65), 0 0 8px 0 rgba(255,255,255,.35) inset;
     }
 
     .green-button--telegram.icon-left {
@@ -148,6 +169,11 @@ svg {
 
     .green-button--telegram .green-button__icon {
         display: none;
+    }
+
+    [data-aos] {
+        transition-duration: .45s !important;
+        transition-delay: 0s !important;
     }
 
     .course__lead,

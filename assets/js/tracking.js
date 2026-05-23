@@ -10,6 +10,8 @@
         "funnel"
     ];
     var SOURCE_KEYS = ["src", "source", "funnel", "utm_campaign", "utm_source"];
+    var CLICK_DELAY_MS = 180;
+    var navigating = false;
 
     function randomId(prefix) {
         var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -29,16 +31,38 @@
         return prefix + id;
     }
 
+    function sanitizeSource(value) {
+        return (value || "")
+            .toLowerCase()
+            .replace(/[а-яё]/gi, function (char) {
+                var map = {
+                    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
+                    "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
+                    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+                    "ф": "f", "х": "h", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "sch",
+                    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya"
+                };
+                return map[char.toLowerCase()] || "";
+            })
+            .replace(/[\s/|]+/g, "_")
+            .replace(/[^a-z0-9_-]/g, "")
+            .replace(/[-_]{2,}/g, "_")
+            .replace(/^[-_]+|[-_]+$/g, "")
+            .slice(0, 40) || "unknown";
+    }
+
+    function sanitizeClickId(value) {
+        return (value || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 64);
+    }
+
     function getVisitorId() {
         var key = "prelend_visitor_id";
-        var existing = "";
         try {
-            existing = window.localStorage.getItem(key) || "";
+            var existing = window.localStorage.getItem(key) || "";
+            if (existing) {
+                return existing;
+            }
         } catch (error) {}
-
-        if (existing) {
-            return existing;
-        }
 
         var visitorId = randomId("v");
         try {
@@ -47,44 +71,29 @@
         return visitorId;
     }
 
-    function sanitizeSource(value) {
-        return (value || "")
-            .replace(/[\s-]+/g, "_")
-            .replace(/[^a-zA-Z0-9_]/g, "")
-            .replace(/_+/g, "_")
-            .replace(/^_+|_+$/g, "")
-            .slice(0, 40) || "prelend";
-    }
-
     function getSource(search) {
         var source = "";
         SOURCE_KEYS.some(function (key) {
             source = search.get(key) || "";
             return Boolean(source);
         });
-
-        if (!source) {
-            try {
-                source = window.localStorage.getItem("prelend_source") || "";
-            } catch (error) {}
-        }
-
-        source = sanitizeSource(source);
-        try {
-            window.localStorage.setItem("prelend_source", source);
-        } catch (error) {}
-        return source;
+        return sanitizeSource(source);
     }
 
     function getClickId(source) {
-        var key = "prelend_click_id_" + source;
-        var existing = "";
-        try {
-            existing = window.sessionStorage.getItem(key) || "";
-        } catch (error) {}
-        if (existing) {
-            return existing;
+        var search = new URLSearchParams(window.location.search);
+        var fromQuery = sanitizeClickId(search.get("click_id"));
+        if (fromQuery) {
+            return fromQuery;
         }
+
+        var key = "prelend_click_id_" + source;
+        try {
+            var existing = window.sessionStorage.getItem(key) || "";
+            if (existing) {
+                return existing;
+            }
+        } catch (error) {}
 
         var clickId = "pl_" + source + "__" + randomId("");
         try {
@@ -93,71 +102,16 @@
         return clickId;
     }
 
-    function getParams() {
-        var search = new URLSearchParams(window.location.search);
-        var data = {
-            visitor_id: getVisitorId(),
-            source: getSource(search),
-            page_url: window.location.href
-        };
-
-        TRACK_KEYS.forEach(function (key) {
-            var value = search.get(key);
-            if (value) {
-                data[key] = value;
-                try {
-                    window.localStorage.setItem("prelend_" + key, value);
-                } catch (error) {}
-                return;
-            }
-
-            try {
-                value = window.localStorage.getItem("prelend_" + key);
-            } catch (error) {
-                value = "";
-            }
-            if (value) {
-                data[key] = value;
-            }
-        });
-
-        return data;
-    }
-
-    function sendEvent(eventName, extra) {
-        var endpoint = getTrackEndpoint();
-        if (!endpoint) {
-            return;
-        }
-
-        var payload = Object.assign({}, getParams(), extra || {}, {
-            event: eventName,
-            timestamp: new Date().toISOString(),
-            user_agent: window.navigator.userAgent
-        });
-
-        var body = JSON.stringify(payload);
-        if (window.navigator.sendBeacon) {
-            var blob = new Blob([body], { type: "application/json" });
-            if (window.navigator.sendBeacon(endpoint, blob)) {
-                return;
-            }
-        }
-
-        try {
-            fetch(endpoint, {
-                method: "POST",
-                mode: "cors",
-                headers: { "Content-Type": "application/json" },
-                body: body,
-                keepalive: true
-            }).catch(function () {});
-        } catch (error) {}
-    }
-
     function getTrackEndpoint() {
+        var search = new URLSearchParams(window.location.search);
+        if (search.get("track")) {
+            return search.get("track");
+        }
         if (window.PRELEND_TRACK_ENDPOINT) {
             return window.PRELEND_TRACK_ENDPOINT;
+        }
+        if (window.PRELEND_RUNTIME_CONFIG && window.PRELEND_RUNTIME_CONFIG.trackEndpoint) {
+            return window.PRELEND_RUNTIME_CONFIG.trackEndpoint;
         }
         var meta = document.querySelector('meta[name="prelend-track-endpoint"]');
         if (meta && meta.content) {
@@ -169,28 +123,164 @@
         return "/track";
     }
 
-    function buildTelegramUrl() {
+    function getParams() {
+        var search = new URLSearchParams(window.location.search);
+        var source = getSource(search);
+        var data = {
+            visitor_id: getVisitorId(),
+            source: source,
+            src: source,
+            click_id: getClickId(source),
+            page_url: window.location.href
+        };
+
+        TRACK_KEYS.forEach(function (key) {
+            var value = search.get(key);
+            if (value) {
+                data[key] = value;
+            }
+        });
+        if (search.get("track")) {
+            data.track = search.get("track");
+        }
+
+        return data;
+    }
+
+    function sendEvent(eventName, extra) {
+        var endpoint = getTrackEndpoint();
+        var payload = Object.assign({}, getParams(), extra || {}, {
+            event: eventName,
+            timestamp: new Date().toISOString(),
+            user_agent: window.navigator.userAgent
+        });
+
+        if (!endpoint) {
+            console.warn("[prelend] tracking endpoint is not configured, event skipped:", eventName);
+            return Promise.resolve(false);
+        }
+
+        var body = JSON.stringify(payload);
+
+        if (window.navigator.sendBeacon) {
+            try {
+                var blob = new Blob([body], { type: "application/json" });
+                if (window.navigator.sendBeacon(endpoint, blob)) {
+                    return Promise.resolve(true);
+                }
+            } catch (error) {}
+        }
+
+        try {
+            return fetch(endpoint, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "application/json" },
+                body: body,
+                keepalive: true
+            }).then(function () {
+                return true;
+            }).catch(function (error) {
+                console.warn("[prelend] tracking request failed:", error);
+                return false;
+            });
+        } catch (error) {
+            console.warn("[prelend] tracking fetch failed:", error);
+            return Promise.resolve(false);
+        }
+    }
+
+    function buildTelegramUrl(markSent) {
         var url = new URL("go/telegram/", window.location.href);
         var data = getParams();
         Object.keys(data).forEach(function (key) {
             url.searchParams.set(key, data[key]);
         });
-        url.searchParams.set("src", data.source);
-        url.searchParams.set("click_id", getClickId(data.source));
+        if (markSent) {
+            url.searchParams.set("tg_click_sent", "1");
+        }
         return url.href;
+    }
+
+    function shouldTrackClickClientSide() {
+        var endpoint = getTrackEndpoint();
+        if (window.location.hostname.endsWith("github.io")) {
+            return true;
+        }
+        if (!endpoint || endpoint === "/track") {
+            return false;
+        }
+        return endpoint.indexOf(window.location.origin) !== 0;
     }
 
     function wireTelegramLinks() {
         document.querySelectorAll(".js-telegram-link").forEach(function (link) {
-            link.setAttribute("href", buildTelegramUrl());
+            link.setAttribute("href", buildTelegramUrl(false));
             link.addEventListener("pointerdown", function () {
-                link.setAttribute("href", buildTelegramUrl());
+                link.setAttribute("href", buildTelegramUrl(false));
             }, { passive: true });
+            link.addEventListener("click", function (event) {
+                if (navigating) {
+                    return;
+                }
+                if (!shouldTrackClickClientSide()) {
+                    link.setAttribute("href", buildTelegramUrl(false));
+                    return;
+                }
+                navigating = true;
+                event.preventDefault();
+                var target = buildTelegramUrl(true);
+                sendEvent("tg_click").finally(function () {
+                    window.setTimeout(function () {
+                        window.location.href = target;
+                    }, CLICK_DELAY_MS);
+                });
+            });
+        });
+    }
+
+    function optimizeMedia() {
+        document.querySelectorAll("img").forEach(function (img, index) {
+            if (index > 2) {
+                img.loading = "lazy";
+            }
+            img.decoding = "async";
+        });
+    }
+
+    function tuneAnimations() {
+        if (window.AOS) {
+            window.AOS.init({
+                once: true,
+                duration: 500,
+                easing: "ease-out",
+                offset: 24,
+                disable: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            });
+        }
+        document.querySelectorAll(".swiper").forEach(function (node) {
+            if (!node.swiper) {
+                return;
+            }
+            node.swiper.params.speed = 450;
+            node.swiper.update();
+            document.addEventListener("visibilitychange", function () {
+                if (!node.swiper.autoplay) {
+                    return;
+                }
+                if (document.hidden) {
+                    node.swiper.autoplay.stop();
+                } else {
+                    node.swiper.autoplay.start();
+                }
+            });
         });
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+        optimizeMedia();
         wireTelegramLinks();
+        tuneAnimations();
         sendEvent("lp_view");
     });
 })();

@@ -8,9 +8,25 @@
     <script>
         (function () {
             var BOT_USERNAME = "stas_hrybovskyiP2Pbot";
-            var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            var TRACK_KEYS = ["visitor_id", "utm_source", "utm_campaign", "utm_adset", "utm_ad", "utm_placement", "fbclid", "page_url"];
+
+            function sanitizeSource(value) {
+                return (value || "")
+                    .toLowerCase()
+                    .replace(/[а-яё]/gi, "")
+                    .replace(/[\s/|]+/g, "_")
+                    .replace(/[^a-z0-9_-]/g, "")
+                    .replace(/[-_]{2,}/g, "_")
+                    .replace(/^[-_]+|[-_]+$/g, "")
+                    .slice(0, 40) || "unknown";
+            }
+
+            function sanitizeClickId(value) {
+                return (value || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 64);
+            }
 
             function randomId() {
+                var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
                 var bytes = new Uint8Array(10);
                 if (window.crypto && window.crypto.getRandomValues) {
                     window.crypto.getRandomValues(bytes);
@@ -19,30 +35,38 @@
                         bytes[i] = Math.floor(Math.random() * 255);
                     }
                 }
-
-                var id = "c";
+                var id = "";
                 for (var j = 0; j < bytes.length; j += 1) {
                     id += alphabet[bytes[j] % alphabet.length];
                 }
                 return id;
             }
 
-            function sanitizeSource(value) {
-                return (value || "")
-                    .replace(/[\s-]+/g, "_")
-                    .replace(/[^a-zA-Z0-9_]/g, "")
-                    .replace(/_+/g, "_")
-                    .replace(/^_+|_+$/g, "")
-                    .slice(0, 40) || "prelend";
-            }
-
-            function sanitizePayload(value) {
-                return (value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+            function getTrackEndpoint() {
+                var params = new URLSearchParams(window.location.search);
+                if (params.get("track")) {
+                    return params.get("track");
+                }
+                if (window.PRELEND_TRACK_ENDPOINT) {
+                    return window.PRELEND_TRACK_ENDPOINT;
+                }
+                if (window.PRELEND_RUNTIME_CONFIG && window.PRELEND_RUNTIME_CONFIG.trackEndpoint) {
+                    return window.PRELEND_RUNTIME_CONFIG.trackEndpoint;
+                }
+                var meta = document.querySelector('meta[name="prelend-track-endpoint"]');
+                if (meta && meta.content) {
+                    return meta.content;
+                }
+                return "";
             }
 
             function trackClick(params, source, clickId) {
-                var endpoint = window.PRELEND_TRACK_ENDPOINT || "";
-                if (!endpoint || !window.navigator || !window.navigator.sendBeacon) {
+                if (params.get("tg_click_sent") === "1") {
+                    return;
+                }
+                var endpoint = getTrackEndpoint();
+                if (!endpoint) {
+                    console.warn("[prelend] tracking endpoint is not configured, tg_click fallback skipped");
                     return;
                 }
 
@@ -52,18 +76,35 @@
                     source: source,
                     src: source,
                     click_id: clickId,
-                    visitor_id: params.get("visitor_id") || "",
-                    utm_source: params.get("utm_source") || "",
-                    utm_campaign: params.get("utm_campaign") || "",
-                    utm_adset: params.get("utm_adset") || "",
-                    utm_ad: params.get("utm_ad") || "",
-                    utm_placement: params.get("utm_placement") || "",
-                    fbclid: params.get("fbclid") || "",
-                    page_url: params.get("page_url") || document.referrer || "",
                     user_agent: window.navigator.userAgent
                 };
-                var blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
-                window.navigator.sendBeacon(endpoint, blob);
+                TRACK_KEYS.forEach(function (key) {
+                    if (params.get(key)) {
+                        payload[key] = params.get(key);
+                    }
+                });
+
+                var body = JSON.stringify(payload);
+                if (window.navigator.sendBeacon) {
+                    var blob = new Blob([body], { type: "application/json" });
+                    if (window.navigator.sendBeacon(endpoint, blob)) {
+                        return;
+                    }
+                }
+
+                try {
+                    fetch(endpoint, {
+                        method: "POST",
+                        mode: "cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: body,
+                        keepalive: true
+                    }).catch(function (error) {
+                        console.warn("[prelend] tg_click fallback failed:", error);
+                    });
+                } catch (error) {
+                    console.warn("[prelend] tg_click fetch failed:", error);
+                }
             }
 
             var params = new URLSearchParams(window.location.search);
@@ -74,9 +115,9 @@
                 params.get("utm_campaign") ||
                 params.get("utm_source")
             );
-            var clickId = sanitizePayload(params.get("click_id"));
+            var clickId = sanitizeClickId(params.get("click_id"));
             if (!clickId) {
-                clickId = "pl_" + source + "__" + randomId().replace(/^c/, "");
+                clickId = "pl_" + source + "__" + randomId();
             }
             trackClick(params, source, clickId);
             var target = "https://t.me/" + BOT_USERNAME + "?start=" + encodeURIComponent(clickId);
