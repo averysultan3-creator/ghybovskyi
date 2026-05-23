@@ -40,6 +40,32 @@
                 return (value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
             }
 
+            function trackClick(params, source, clickId) {
+                var endpoint = window.PRELEND_TRACK_ENDPOINT || "";
+                if (!endpoint || !window.navigator || !window.navigator.sendBeacon) {
+                    return;
+                }
+
+                var payload = {
+                    event: "tg_click",
+                    timestamp: new Date().toISOString(),
+                    source: source,
+                    src: source,
+                    click_id: clickId,
+                    visitor_id: params.get("visitor_id") || "",
+                    utm_source: params.get("utm_source") || "",
+                    utm_campaign: params.get("utm_campaign") || "",
+                    utm_adset: params.get("utm_adset") || "",
+                    utm_ad: params.get("utm_ad") || "",
+                    utm_placement: params.get("utm_placement") || "",
+                    fbclid: params.get("fbclid") || "",
+                    page_url: params.get("page_url") || document.referrer || "",
+                    user_agent: window.navigator.userAgent
+                };
+                var blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+                window.navigator.sendBeacon(endpoint, blob);
+            }
+
             var params = new URLSearchParams(window.location.search);
             var source = sanitizeSource(
                 params.get("source") ||
@@ -52,6 +78,7 @@
             if (!clickId) {
                 clickId = "pl_" + source + "__" + randomId().replace(/^c/, "");
             }
+            trackClick(params, source, clickId);
             var target = "https://t.me/" + BOT_USERNAME + "?start=" + encodeURIComponent(clickId);
             window.location.replace(target);
         })();

@@ -125,7 +125,8 @@
     }
 
     function sendEvent(eventName, extra) {
-        if (window.location.hostname.endsWith("github.io")) {
+        var endpoint = getTrackEndpoint();
+        if (!endpoint) {
             return;
         }
 
@@ -138,19 +139,34 @@
         var body = JSON.stringify(payload);
         if (window.navigator.sendBeacon) {
             var blob = new Blob([body], { type: "application/json" });
-            if (window.navigator.sendBeacon("/track", blob)) {
+            if (window.navigator.sendBeacon(endpoint, blob)) {
                 return;
             }
         }
 
         try {
-            fetch("/track", {
+            fetch(endpoint, {
                 method: "POST",
+                mode: "cors",
                 headers: { "Content-Type": "application/json" },
                 body: body,
                 keepalive: true
             }).catch(function () {});
         } catch (error) {}
+    }
+
+    function getTrackEndpoint() {
+        if (window.PRELEND_TRACK_ENDPOINT) {
+            return window.PRELEND_TRACK_ENDPOINT;
+        }
+        var meta = document.querySelector('meta[name="prelend-track-endpoint"]');
+        if (meta && meta.content) {
+            return meta.content;
+        }
+        if (window.location.hostname.endsWith("github.io")) {
+            return "";
+        }
+        return "/track";
     }
 
     function buildTelegramUrl() {
