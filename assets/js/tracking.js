@@ -258,6 +258,15 @@
                 disable: window.matchMedia("(prefers-reduced-motion: reduce)").matches
             });
         }
+        window.setTimeout(function () {
+            document.querySelectorAll("[data-aos]").forEach(function (node) {
+                var styles = window.getComputedStyle(node);
+                if (styles.opacity === "0") {
+                    node.style.opacity = "1";
+                    node.style.transform = "none";
+                }
+            });
+        }, 1200);
         document.querySelectorAll(".swiper").forEach(function (node) {
             if (!node.swiper) {
                 return;
