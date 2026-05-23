@@ -129,13 +129,13 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
                                 <img src="assets/img/icon-incide-text.svg"
                                        alt="Image">
                             </span>
-                            CryptoBot-команду                        </span>
+                            -команду                        </span>
                         <img src="assets/img/hero-coin.webp" alt="Image">
                     </div>
                     <div class="hero__rightside">
                         <img src="assets/img/yellow-check.svg" alt="Image">
                         <span>
-                            <span>Потенциал - до 2000 гривен в день</span><br/> Результат зависит от оборота, времени и выполнения инструкций                        </span>
+                            <span>Потенциал - от 2000 гривен в день!</span><br/> Результат зависит от оборота, времени и выполнения инструкций                        </span>
                     </div>
                 </div>
                 <a href="go/telegram/" class="green-button icon-left green-button--telegram js-telegram-link">
@@ -364,7 +364,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
                                                                                     </div>
                                     </div>
                                     <div class="review-item__text">
-                                        <p>До этого не понимал, как работает P2P / CryptoBot. После вводной и созвона стало понятно, где смотреть заявки, как работает стакан и почему важно не лезть хаотично.</p>
+                                        <p>Втомився працювати у найманні та звільнився за 3 місяці перед весіллям. Після вводної, созвона і підтримки вийшов на результат від 100 $ на день.</p>
                                     </div>
                                     <div class="review-item__points">
                                         <div class="point">
@@ -372,14 +372,14 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
                                                 <img src="assets/img/yellow-pin.svg" alt="Image">
                                                 <span>Точка A</span>
                                             </div>
-                                            <p>Не понимал механику</p>
+                                            <p>Робота в наймі</p>
                                         </div>
                                         <div class="point">
                                             <div class="point-top">
                                                 <img src="assets/img/black-pin.svg" alt="Image">
                                                 <span>Точка Б</span>
                                             </div>
-                                            <p>Двигается по инструкции</p>
+                                            <p>100 $ + на день</p>
                                         </div>
                                     </div>
                                 </div>
@@ -404,7 +404,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
                                                                                     </div>
                                     </div>
                                     <div class="review-item__text">
-                                        <p>Понравилось, что не просто дали материалы, а объяснили порядок действий и подключили к рабочему каналу. С командой проще понимать, что смотреть и где не делать лишних действий.</p>
+                                        <p>Іван приїхав до Польщі з Молдови і шукав чим займатися. Після вводної та підключення до робочого формату вийшов до 2000 $ щомісячно.</p>
                                     </div>
                                     <div class="review-item__points">
                                         <div class="point">
@@ -412,14 +412,14 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
                                                 <img src="assets/img/yellow-pin.svg" alt="Image">
                                                 <span>Точка A</span>
                                             </div>
-                                            <p>Разбирался один</p>
+                                            <p>Шукав себе</p>
                                         </div>
                                         <div class="point">
                                             <div class="point-top">
                                                 <img src="assets/img/black-pin.svg" alt="Image">
                                                 <span>Точка Б</span>
                                             </div>
-                                            <p>Рабочий канал</p>
+                                            <p>2000 $ / міс</p>
                                         </div>
                                     </div>
                                 </div>
@@ -444,7 +444,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
                                                                                     </div>
                                     </div>
                                     <div class="review-item__text">
-                                        <p>Самому было сложно понять, где есть рабочие связки. После вводной, созвона и поддержки стало понятнее, как проверять вход, выход, лимиты и актуальный спред.</p>
+                                        <p>Віталій працює в піцерії і не хоче зупинятися на досягнутому. Зараз поєднує основну роботу з Р2Р і сумарно виходить від 4000 $ щомісяця.</p>
                                     </div>
                                     <div class="review-item__points">
                                         <div class="point">
@@ -452,14 +452,14 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
                                                 <img src="assets/img/yellow-pin.svg" alt="Image">
                                                 <span>Точка A</span>
                                             </div>
-                                            <p>Хаотичные действия</p>
+                                            <p>Робота в наймі</p>
                                         </div>
                                         <div class="point">
                                             <div class="point-top">
                                                 <img src="assets/img/black-pin.svg" alt="Image">
                                                 <span>Точка Б</span>
                                             </div>
-                                            <p>Проверка связок</p>
+                                            <p>4000 $ + / міс</p>
                                         </div>
                                     </div>
                                 </div>
@@ -483,12 +483,98 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const reviewsWrapper = document.querySelector('.reviews__slider .swiper-wrapper');
+            const baseSlides = reviewsWrapper ? Array.from(reviewsWrapper.children) : [];
+            const extraReviews = [
+                {
+                    initials: 'АК',
+                    name: 'андрій<br> коваленко',
+                    background: 'linear-gradient(157deg, #FFB84D 8.57%, #D97B00 91.43%)',
+                    gallery: 'Отзыв Андрея',
+                    text: 'Прийшов без розуміння, як працює CryptoBot. Після созвона і робочого каналу стало зрозуміло, де дивитися заявки, ліміти і спред.',
+                    pointA: 'Новачок у P2P',
+                    pointB: '100 $ + на день'
+                },
+                {
+                    initials: 'МЛ',
+                    name: 'марія<br> литвин',
+                    background: 'linear-gradient(157deg, #FF6EB4 8.57%, #B42172 91.43%)',
+                    gallery: 'Отзыв Марии',
+                    text: 'Самій було складно розібратися, куди натискати і які ситуації брати. З командою зʼявився порядок і стало простіше діяти.',
+                    pointA: 'Плуталась у звʼязках',
+                    pointB: '2000 $ / міс'
+                },
+                {
+                    initials: 'ДМ',
+                    name: 'денис<br> мороз',
+                    background: 'linear-gradient(157deg, #7B61FF 8.57%, #3B1BB7 91.43%)',
+                    gallery: 'Отзыв Дениса',
+                    text: 'Після вводної зрозумів, що важливо не поспішати, а перевіряти вхід, вихід, обсяг і актуальний спред перед дією.',
+                    pointA: 'Хаотичні дії',
+                    pointB: '80 $ + на день'
+                },
+                {
+                    initials: 'ОС',
+                    name: 'олег<br> савчук',
+                    background: 'linear-gradient(157deg, #20D0C2 8.57%, #087C7A 91.43%)',
+                    gallery: 'Отзыв Олега',
+                    text: 'Сподобалось, що перед стартом був короткий созвон і розбір ситуації. Після цього зрозумів, який оборот потрібен і як не робити зайвого.',
+                    pointA: 'Не було системи',
+                    pointB: '1600 $ / міс'
+                },
+                {
+                    initials: 'НР',
+                    name: 'назар<br> романюк',
+                    background: 'linear-gradient(157deg, #95E06C 8.57%, #419E22 91.43%)',
+                    gallery: 'Отзыв Назара',
+                    text: 'Раніше думав, що P2P завжди про карти і ризиковані перекази. Тут пояснили іншу логіку через CryptoBot, стакан, заявки і ліміти.',
+                    pointA: 'Не розумів формат',
+                    pointB: '120 $ + на день'
+                },
+                {
+                    initials: 'АШ',
+                    name: 'артем<br> шевченко',
+                    background: 'linear-gradient(157deg, #54A9FF 8.57%, #0A78E7 91.43%)',
+                    gallery: 'Отзыв Артема',
+                    text: 'Найбільше допомогла підтримка на перших діях. Коли є ментори і зрозумілий порядок, набагато легше не робити помилок.',
+                    pointA: 'Робота в наймі',
+                    pointB: '3000 $ + / міс'
+                }
+            ];
+
+            if (reviewsWrapper && baseSlides.length) {
+                extraReviews.forEach(function(review, index) {
+                    const slide = baseSlides[index % baseSlides.length].cloneNode(true);
+                    const logo = slide.querySelector('.review-item__logo');
+                    const logoText = slide.querySelector('.review-item__logo span');
+                    const name = slide.querySelector('.review-item__name');
+                    const gallery = slide.querySelector('.gallery > span');
+                    const text = slide.querySelector('.review-item__text p');
+                    const points = slide.querySelectorAll('.point p');
+
+                    if (logo) logo.style.background = review.background;
+                    if (logoText) logoText.textContent = review.initials;
+                    if (name) name.innerHTML = review.name;
+                    if (gallery) gallery.textContent = review.gallery;
+                    if (text) text.textContent = review.text;
+                    if (points[0]) points[0].textContent = review.pointA;
+                    if (points[1]) points[1].textContent = review.pointB;
+                    reviewsWrapper.appendChild(slide);
+                });
+            }
+
             const reviewsSwiper = new Swiper('.reviews__slider', {
                 observer: true,
                 observeParents: true,
                 slidesPerView: 1,
                 spaceBetween: 20,
                 speed: 800,
+                loop: true,
+                grabCursor: true,
+                autoplay: {
+                    delay: 3500,
+                    disableOnInteraction: false,
+                },
 
                 navigation: {
                     prevEl: '.reviews-prev',
