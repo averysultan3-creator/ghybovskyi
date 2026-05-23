@@ -5,8 +5,11 @@
         "utm_adset",
         "utm_ad",
         "utm_placement",
-        "fbclid"
+        "fbclid",
+        "country",
+        "funnel"
     ];
+    var SOURCE_KEYS = ["src", "source", "funnel", "utm_campaign", "utm_source"];
 
     function randomId(prefix) {
         var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -44,9 +47,46 @@
         return visitorId;
     }
 
-    function getClickId() {
-        var key = "prelend_click_id";
-        var clickId = randomId("c");
+    function sanitizeSource(value) {
+        return (value || "")
+            .replace(/[\s-]+/g, "_")
+            .replace(/[^a-zA-Z0-9_]/g, "")
+            .replace(/_+/g, "_")
+            .replace(/^_+|_+$/g, "")
+            .slice(0, 40) || "prelend";
+    }
+
+    function getSource(search) {
+        var source = "";
+        SOURCE_KEYS.some(function (key) {
+            source = search.get(key) || "";
+            return Boolean(source);
+        });
+
+        if (!source) {
+            try {
+                source = window.localStorage.getItem("prelend_source") || "";
+            } catch (error) {}
+        }
+
+        source = sanitizeSource(source);
+        try {
+            window.localStorage.setItem("prelend_source", source);
+        } catch (error) {}
+        return source;
+    }
+
+    function getClickId(source) {
+        var key = "prelend_click_id_" + source;
+        var existing = "";
+        try {
+            existing = window.sessionStorage.getItem(key) || "";
+        } catch (error) {}
+        if (existing) {
+            return existing;
+        }
+
+        var clickId = "pl_" + source + "__" + randomId("");
         try {
             window.sessionStorage.setItem(key, clickId);
         } catch (error) {}
@@ -57,6 +97,7 @@
         var search = new URLSearchParams(window.location.search);
         var data = {
             visitor_id: getVisitorId(),
+            source: getSource(search),
             page_url: window.location.href
         };
 
@@ -118,13 +159,17 @@
         Object.keys(data).forEach(function (key) {
             url.searchParams.set(key, data[key]);
         });
-        url.searchParams.set("click_id", getClickId());
+        url.searchParams.set("src", data.source);
+        url.searchParams.set("click_id", getClickId(data.source));
         return url.href;
     }
 
     function wireTelegramLinks() {
         document.querySelectorAll(".js-telegram-link").forEach(function (link) {
             link.setAttribute("href", buildTelegramUrl());
+            link.addEventListener("pointerdown", function () {
+                link.setAttribute("href", buildTelegramUrl());
+            }, { passive: true });
         });
     }
 

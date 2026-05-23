@@ -27,8 +27,31 @@
                 return id;
             }
 
+            function sanitizeSource(value) {
+                return (value || "")
+                    .replace(/[\s-]+/g, "_")
+                    .replace(/[^a-zA-Z0-9_]/g, "")
+                    .replace(/_+/g, "_")
+                    .replace(/^_+|_+$/g, "")
+                    .slice(0, 40) || "prelend";
+            }
+
+            function sanitizePayload(value) {
+                return (value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+            }
+
             var params = new URLSearchParams(window.location.search);
-            var clickId = params.get("click_id") || randomId();
+            var source = sanitizeSource(
+                params.get("source") ||
+                params.get("src") ||
+                params.get("funnel") ||
+                params.get("utm_campaign") ||
+                params.get("utm_source")
+            );
+            var clickId = sanitizePayload(params.get("click_id"));
+            if (!clickId) {
+                clickId = "pl_" + source + "__" + randomId().replace(/^c/, "");
+            }
             var target = "https://t.me/" + BOT_USERNAME + "?start=" + encodeURIComponent(clickId);
             window.location.replace(target);
         })();

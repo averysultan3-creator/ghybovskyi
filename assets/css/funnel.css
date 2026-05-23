@@ -5,6 +5,70 @@
     box-shadow: 0 12px 70px 0 #0f5d3e, 0 0 12px 0 rgba(255,255,255,.55) inset;
 }
 
+html,
+body {
+    overflow-x: hidden;
+}
+
+body {
+    text-rendering: optimizeLegibility;
+}
+
+img,
+svg {
+    max-width: 100%;
+}
+
+[data-aos] {
+    backface-visibility: hidden;
+}
+
+.title,
+.hero__middle,
+.hero__rightside,
+.hero-label__text,
+.for-who-item__title,
+.training-item__title,
+.result-item__content,
+.review-item__name,
+.review-item__text,
+.point p,
+.about__title,
+.about-item,
+.faq-spoller__title,
+.faq-spoller__body {
+    min-width: 0;
+    overflow-wrap: break-word;
+    letter-spacing: 0;
+}
+
+.reviews__slider,
+.reviews__slider .swiper-wrapper,
+.reviews__slider .swiper-slide {
+    transform: translate3d(0, 0, 0);
+}
+
+.reviews__slider .swiper-slide {
+    height: auto;
+}
+
+.review-item {
+    height: 100%;
+}
+
+.review-item__points {
+    align-items: stretch;
+}
+
+.point {
+    min-width: 0;
+}
+
+.gallery-hidden img {
+    width: 1px;
+    height: 1px;
+}
+
 .green-button--telegram.icon-left {
     padding: .8125rem 3.75rem .8125rem .8125rem;
 }
@@ -97,6 +161,25 @@
     }
 }
 
+@media (max-width: 37.5em) {
+    .hero__middle {
+        line-height: .98;
+    }
+
+    .review-item__points {
+        gap: .625rem;
+    }
+
+    .point-top {
+        column-gap: .375rem;
+    }
+
+    .point p {
+        font-size: .95rem;
+        line-height: 1.25;
+    }
+}
+
 @media (max-width: 29.99875em) {
     .hero__content {
         min-height: 100svh;
@@ -119,5 +202,16 @@
     .hero-label {
         width: min(100%, 20rem);
         justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .001ms !important;
     }
 }
