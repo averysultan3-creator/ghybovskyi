@@ -10,23 +10,30 @@
         "funnel"
     ];
     var SOURCE_KEYS = ["src", "source", "funnel", "utm_campaign", "utm_source"];
-    var CLICK_DELAY_MS = 180;
+    var CLICK_DELAY_MS = 220;
+    var BOT_USERNAME = (
+        (window.PRELEND_RUNTIME_CONFIG && window.PRELEND_RUNTIME_CONFIG.botUsername) ||
+        window.PRELEND_BOT_USERNAME ||
+        "stas_hrybovskyiP2Pbot"
+    ).replace(/^@/, "");
     var navigating = false;
 
     function randomId(prefix) {
         var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         var bytes = new Uint8Array(10);
+        var id = "";
+        var i = 0;
+
         if (window.crypto && window.crypto.getRandomValues) {
             window.crypto.getRandomValues(bytes);
         } else {
-            for (var i = 0; i < bytes.length; i += 1) {
+            for (i = 0; i < bytes.length; i += 1) {
                 bytes[i] = Math.floor(Math.random() * 255);
             }
         }
 
-        var id = "";
-        for (var j = 0; j < bytes.length; j += 1) {
-            id += alphabet[bytes[j] % alphabet.length];
+        for (i = 0; i < bytes.length; i += 1) {
+            id += alphabet[bytes[i] % alphabet.length];
         }
         return prefix + id;
     }
@@ -34,13 +41,14 @@
     function sanitizeSource(value) {
         return (value || "")
             .toLowerCase()
-            .replace(/[а-яё]/gi, function (char) {
+            .replace(/[а-яёіїєґ]/gi, function (char) {
                 var map = {
                     "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
                     "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
                     "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
                     "ф": "f", "х": "h", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "sch",
-                    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya"
+                    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
+                    "і": "i", "ї": "yi", "є": "e", "ґ": "g"
                 };
                 return map[char.toLowerCase()] || "";
             })
@@ -104,8 +112,9 @@
 
     function getTrackEndpoint() {
         var search = new URLSearchParams(window.location.search);
-        if (search.get("track")) {
-            return search.get("track");
+        var fromQuery = search.get("track");
+        if (fromQuery) {
+            return fromQuery;
         }
         if (window.PRELEND_TRACK_ENDPOINT) {
             return window.PRELEND_TRACK_ENDPOINT;
@@ -143,7 +152,6 @@
         if (search.get("track")) {
             data.track = search.get("track");
         }
-
         return data;
     }
 
@@ -161,7 +169,6 @@
         }
 
         var body = JSON.stringify(payload);
-
         if (window.navigator.sendBeacon) {
             try {
                 var blob = new Blob([body], { type: "application/json" });
@@ -190,46 +197,35 @@
         }
     }
 
-    function buildTelegramUrl(markSent) {
-        var url = new URL("go/telegram/", window.location.href);
+    function buildTelegramUrl() {
+        var url = new URL("https://t.me/" + BOT_USERNAME);
         var data = getParams();
-        Object.keys(data).forEach(function (key) {
-            url.searchParams.set(key, data[key]);
-        });
-        if (markSent) {
-            url.searchParams.set("tg_click_sent", "1");
-        }
+        url.searchParams.set("start", data.click_id);
         return url.href;
     }
 
     function shouldTrackClickClientSide() {
         var endpoint = getTrackEndpoint();
-        if (window.location.hostname.endsWith("github.io")) {
-            return true;
-        }
-        if (!endpoint || endpoint === "/track") {
-            return false;
-        }
-        return endpoint.indexOf(window.location.origin) !== 0;
+        return Boolean(endpoint);
     }
 
     function wireTelegramLinks() {
         document.querySelectorAll(".js-telegram-link").forEach(function (link) {
-            link.setAttribute("href", buildTelegramUrl(false));
+            link.setAttribute("href", buildTelegramUrl());
             link.addEventListener("pointerdown", function () {
-                link.setAttribute("href", buildTelegramUrl(false));
+                link.setAttribute("href", buildTelegramUrl());
             }, { passive: true });
             link.addEventListener("click", function (event) {
                 if (navigating) {
                     return;
                 }
                 if (!shouldTrackClickClientSide()) {
-                    link.setAttribute("href", buildTelegramUrl(false));
+                    link.setAttribute("href", buildTelegramUrl());
                     return;
                 }
                 navigating = true;
                 event.preventDefault();
-                var target = buildTelegramUrl(true);
+                var target = buildTelegramUrl();
                 sendEvent("tg_click").finally(function () {
                     window.setTimeout(function () {
                         window.location.href = target;
