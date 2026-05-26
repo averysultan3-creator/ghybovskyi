@@ -17,6 +17,7 @@
         "stas_hrybovskyiP2Pbot"
     ).replace(/^@/, "");
     var navigating = false;
+    var lpViewTracked = false;
 
     function randomId(prefix) {
         var alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -155,13 +156,36 @@
         return data;
     }
 
-    function sendEvent(eventName, extra) {
-        var endpoint = getTrackEndpoint();
-        var payload = Object.assign({}, getParams(), extra || {}, {
+    function buildPayload(eventName, extra) {
+        return Object.assign({}, getParams(), extra || {}, {
             event: eventName,
             timestamp: new Date().toISOString(),
             user_agent: window.navigator.userAgent
         });
+    }
+
+    function sendPixel(endpoint, payload) {
+        try {
+            var url = new URL("/track.gif", endpoint);
+            Object.keys(payload).forEach(function (key) {
+                if (payload[key] !== undefined && payload[key] !== null && payload[key] !== "") {
+                    url.searchParams.set(key, payload[key]);
+                }
+            });
+            var img = new Image(1, 1);
+            img.decoding = "async";
+            img.src = url.href + "&r=" + Date.now();
+            return true;
+        } catch (error) {
+            console.warn("[prelend] tracking pixel failed:", error);
+            return false;
+        }
+    }
+
+    function sendEvent(eventName, extra, options) {
+        options = options || {};
+        var endpoint = getTrackEndpoint();
+        var payload = buildPayload(eventName, extra);
 
         if (!endpoint) {
             console.warn("[prelend] tracking endpoint is not configured, event skipped:", eventName);
@@ -169,7 +193,7 @@
         }
 
         var body = JSON.stringify(payload);
-        if (window.navigator.sendBeacon) {
+        if (!options.preferFetch && window.navigator.sendBeacon) {
             try {
                 var blob = new Blob([body], { type: "application/json" });
                 if (window.navigator.sendBeacon(endpoint, blob)) {
@@ -189,12 +213,35 @@
                 return true;
             }).catch(function (error) {
                 console.warn("[prelend] tracking request failed:", error);
+                if (options.pixelFallback) {
+                    return sendPixel(endpoint, payload);
+                }
                 return false;
             });
         } catch (error) {
             console.warn("[prelend] tracking fetch failed:", error);
+            if (options.pixelFallback) {
+                return Promise.resolve(sendPixel(endpoint, payload));
+            }
             return Promise.resolve(false);
         }
+    }
+
+    function trackLpView() {
+        if (lpViewTracked) {
+            return;
+        }
+        lpViewTracked = true;
+        sendEvent("lp_view", null, {
+            preferFetch: true,
+            pixelFallback: true
+        }).then(function (ok) {
+            if (!ok) {
+                window.setTimeout(function () {
+                    sendPixel(getTrackEndpoint(), buildPayload("lp_view_retry"));
+                }, 700);
+            }
+        });
     }
 
     function buildTelegramUrl() {
@@ -286,6 +333,6 @@
         optimizeMedia();
         wireTelegramLinks();
         tuneAnimations();
-        sendEvent("lp_view");
+        trackLpView();
     });
 })();
