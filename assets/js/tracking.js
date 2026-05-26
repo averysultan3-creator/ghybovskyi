@@ -182,6 +182,39 @@
         }
     }
 
+    function sendPixelAndWait(endpoint, payload) {
+        return new Promise(function (resolve) {
+            try {
+                var url = new URL("/track.gif", endpoint);
+                Object.keys(payload).forEach(function (key) {
+                    if (payload[key] !== undefined && payload[key] !== null && payload[key] !== "") {
+                        url.searchParams.set(key, payload[key]);
+                    }
+                });
+                url.searchParams.set("r", Date.now());
+
+                var done = false;
+                var img = new Image(1, 1);
+                var finish = function (ok) {
+                    if (done) {
+                        return;
+                    }
+                    done = true;
+                    resolve(ok);
+                };
+
+                img.onload = function () { finish(true); };
+                img.onerror = function () { finish(false); };
+                img.decoding = "async";
+                img.src = url.href;
+                window.setTimeout(function () { finish(true); }, 1200);
+            } catch (error) {
+                console.warn("[prelend] tracking pixel failed:", error);
+                resolve(false);
+            }
+        });
+    }
+
     function sendEvent(eventName, extra, options) {
         options = options || {};
         var endpoint = getTrackEndpoint();
@@ -232,14 +265,19 @@
             return;
         }
         lpViewTracked = true;
-        sendEvent("lp_view", null, {
-            preferFetch: true,
-            pixelFallback: true
-        }).then(function (ok) {
+
+        var endpoint = getTrackEndpoint();
+        if (!endpoint) {
+            console.warn("[prelend] tracking endpoint is not configured, lp_view skipped");
+            return;
+        }
+
+        sendPixelAndWait(endpoint, buildPayload("lp_view")).then(function (ok) {
             if (!ok) {
-                window.setTimeout(function () {
-                    sendPixel(getTrackEndpoint(), buildPayload("lp_view_retry"));
-                }, 700);
+                sendEvent("lp_view", null, {
+                    preferFetch: true,
+                    pixelFallback: false
+                });
             }
         });
     }
