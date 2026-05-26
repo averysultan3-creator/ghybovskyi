@@ -10,13 +10,11 @@
         "funnel"
     ];
     var SOURCE_KEYS = ["src", "source", "funnel", "utm_campaign", "utm_source"];
-    var CLICK_DELAY_MS = 220;
     var BOT_USERNAME = (
         (window.PRELEND_RUNTIME_CONFIG && window.PRELEND_RUNTIME_CONFIG.botUsername) ||
         window.PRELEND_BOT_USERNAME ||
         "stas_hrybovskyiP2Pbot"
     ).replace(/^@/, "");
-    var navigating = false;
     var lpViewTracked = false;
 
     function randomId(prefix) {
@@ -289,34 +287,42 @@
         return url.href;
     }
 
-    function shouldTrackClickClientSide() {
+    function buildTrackingRedirectUrl() {
         var endpoint = getTrackEndpoint();
-        return Boolean(endpoint);
+        if (!endpoint) {
+            return buildTelegramUrl();
+        }
+
+        try {
+            var data = getParams();
+            var url = new URL("/go/telegram", endpoint);
+            url.searchParams.set("source", data.source);
+            url.searchParams.set("src", data.source);
+            url.searchParams.set("click_id", data.click_id);
+            url.searchParams.set("visitor_id", data.visitor_id);
+            url.searchParams.set("page_url", data.page_url);
+            TRACK_KEYS.forEach(function (key) {
+                if (data[key]) {
+                    url.searchParams.set(key, data[key]);
+                }
+            });
+            return url.href;
+        } catch (error) {
+            console.warn("[prelend] failed to build tracking redirect:", error);
+            return buildTelegramUrl();
+        }
     }
 
     function wireTelegramLinks() {
         document.querySelectorAll(".js-telegram-link").forEach(function (link) {
-            link.setAttribute("href", buildTelegramUrl());
-            link.addEventListener("pointerdown", function () {
-                link.setAttribute("href", buildTelegramUrl());
-            }, { passive: true });
-            link.addEventListener("click", function (event) {
-                if (navigating) {
-                    return;
-                }
-                if (!shouldTrackClickClientSide()) {
-                    link.setAttribute("href", buildTelegramUrl());
-                    return;
-                }
-                navigating = true;
-                event.preventDefault();
-                var target = buildTelegramUrl();
-                sendEvent("tg_click").finally(function () {
-                    window.setTimeout(function () {
-                        window.location.href = target;
-                    }, CLICK_DELAY_MS);
-                });
-            });
+            var refreshHref = function () {
+                link.setAttribute("href", buildTrackingRedirectUrl());
+            };
+
+            refreshHref();
+            link.addEventListener("pointerdown", refreshHref, { passive: true });
+            link.addEventListener("focus", refreshHref, { passive: true });
+            link.addEventListener("click", refreshHref);
         });
     }
 
