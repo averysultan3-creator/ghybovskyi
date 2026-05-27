@@ -287,42 +287,19 @@
         return url.href;
     }
 
-    function buildTrackingRedirectUrl() {
-        var endpoint = getTrackEndpoint();
-        if (!endpoint) {
-            return buildTelegramUrl();
-        }
-
-        try {
-            var data = getParams();
-            var url = new URL("/go/telegram", endpoint);
-            url.searchParams.set("source", data.source);
-            url.searchParams.set("src", data.source);
-            url.searchParams.set("click_id", data.click_id);
-            url.searchParams.set("visitor_id", data.visitor_id);
-            url.searchParams.set("page_url", data.page_url);
-            TRACK_KEYS.forEach(function (key) {
-                if (data[key]) {
-                    url.searchParams.set(key, data[key]);
-                }
-            });
-            return url.href;
-        } catch (error) {
-            console.warn("[prelend] failed to build tracking redirect:", error);
-            return buildTelegramUrl();
-        }
-    }
-
     function wireTelegramLinks() {
         document.querySelectorAll(".js-telegram-link").forEach(function (link) {
             var refreshHref = function () {
-                link.setAttribute("href", buildTrackingRedirectUrl());
+                link.setAttribute("href", buildTelegramUrl());
             };
 
             refreshHref();
             link.addEventListener("pointerdown", refreshHref, { passive: true });
             link.addEventListener("focus", refreshHref, { passive: true });
-            link.addEventListener("click", refreshHref);
+            link.addEventListener("click", function () {
+                refreshHref();
+                sendEvent("tg_click", null, { pixelFallback: true });
+            });
         });
     }
 
