@@ -109,26 +109,29 @@
         return clickId;
     }
 
-    function getTrackEndpoint() {
+    function addEndpoint(list, value) {
+        value = (value || "").trim();
+        if (value && list.indexOf(value) === -1) {
+            list.push(value);
+        }
+    }
+
+    function getTrackEndpoints() {
         var search = new URLSearchParams(window.location.search);
-        var fromQuery = search.get("track");
-        if (fromQuery) {
-            return fromQuery;
-        }
-        if (window.PRELEND_TRACK_ENDPOINT) {
-            return window.PRELEND_TRACK_ENDPOINT;
-        }
-        if (window.PRELEND_RUNTIME_CONFIG && window.PRELEND_RUNTIME_CONFIG.trackEndpoint) {
-            return window.PRELEND_RUNTIME_CONFIG.trackEndpoint;
-        }
+        var endpoints = [];
         var meta = document.querySelector('meta[name="prelend-track-endpoint"]');
+        addEndpoint(endpoints, search.get("track"));
+        addEndpoint(endpoints, window.PRELEND_TRACK_ENDPOINT);
+        if (window.PRELEND_RUNTIME_CONFIG && window.PRELEND_RUNTIME_CONFIG.trackEndpoint) {
+            addEndpoint(endpoints, window.PRELEND_RUNTIME_CONFIG.trackEndpoint);
+        }
         if (meta && meta.content) {
-            return meta.content;
+            addEndpoint(endpoints, meta.content);
         }
-        if (window.location.hostname.endsWith("github.io")) {
-            return "";
+        if (!window.location.hostname.endsWith("github.io")) {
+            addEndpoint(endpoints, "/track");
         }
-        return "/track";
+        return endpoints;
     }
 
     function getParams() {
@@ -163,6 +166,8 @@
         });
         if (eventName === "tg_click") {
             payload.event_id = "tg_" + data.click_id;
+        } else if (eventName === "lp_view") {
+            payload.event_id = "lp_" + data.click_id;
         }
         return payload;
     }
@@ -220,29 +225,31 @@
 
     function sendEvent(eventName, extra, options) {
         options = options || {};
-        var endpoint = getTrackEndpoint();
+        var endpoints = getTrackEndpoints();
         var payload = buildPayload(eventName, extra);
 
-        if (!endpoint) {
+        if (!endpoints.length) {
             console.warn("[prelend] tracking endpoint is not configured, event skipped:", eventName);
             return Promise.resolve(false);
         }
 
         var body = JSON.stringify(payload);
         if (options.pixelFirst) {
-            sendPixel(endpoint, payload);
+            endpoints.forEach(function (endpoint) {
+                sendPixel(endpoint, payload);
+            });
         }
         if (!options.preferFetch && window.navigator.sendBeacon) {
             try {
                 var blob = new Blob([body], { type: "application/json" });
-                if (window.navigator.sendBeacon(endpoint, blob)) {
+                if (window.navigator.sendBeacon(endpoints[0], blob)) {
                     return Promise.resolve(true);
                 }
             } catch (error) {}
         }
 
         try {
-            return fetch(endpoint, {
+            return fetch(endpoints[0], {
                 method: "POST",
                 mode: "cors",
                 headers: { "Content-Type": "application/json" },
@@ -253,14 +260,20 @@
             }).catch(function (error) {
                 console.warn("[prelend] tracking request failed:", error);
                 if (options.pixelFallback) {
-                    return sendPixel(endpoint, payload);
+                    endpoints.forEach(function (endpoint) {
+                        sendPixel(endpoint, payload);
+                    });
+                    return true;
                 }
                 return false;
             });
         } catch (error) {
             console.warn("[prelend] tracking fetch failed:", error);
             if (options.pixelFallback) {
-                return Promise.resolve(sendPixel(endpoint, payload));
+                endpoints.forEach(function (endpoint) {
+                    sendPixel(endpoint, payload);
+                });
+                return Promise.resolve(true);
             }
             return Promise.resolve(false);
         }
@@ -272,19 +285,22 @@
         }
         lpViewTracked = true;
 
-        var endpoint = getTrackEndpoint();
-        if (!endpoint) {
+        var endpoints = getTrackEndpoints();
+        if (!endpoints.length) {
             console.warn("[prelend] tracking endpoint is not configured, lp_view skipped");
             return;
         }
 
-        sendPixelAndWait(endpoint, buildPayload("lp_view")).then(function (ok) {
+        sendPixelAndWait(endpoints[0], buildPayload("lp_view")).then(function (ok) {
             if (!ok) {
                 sendEvent("lp_view", null, {
                     preferFetch: true,
                     pixelFallback: false
                 });
             }
+        });
+        endpoints.slice(1).forEach(function (endpoint) {
+            sendPixel(endpoint, buildPayload("lp_view"));
         });
     }
 
