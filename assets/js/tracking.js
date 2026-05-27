@@ -155,11 +155,16 @@
     }
 
     function buildPayload(eventName, extra) {
-        return Object.assign({}, getParams(), extra || {}, {
+        var data = getParams();
+        var payload = Object.assign({}, data, extra || {}, {
             event: eventName,
             timestamp: new Date().toISOString(),
             user_agent: window.navigator.userAgent
         });
+        if (eventName === "tg_click") {
+            payload.event_id = "tg_" + data.click_id;
+        }
+        return payload;
     }
 
     function sendPixel(endpoint, payload) {
@@ -224,6 +229,9 @@
         }
 
         var body = JSON.stringify(payload);
+        if (options.pixelFirst) {
+            sendPixel(endpoint, payload);
+        }
         if (!options.preferFetch && window.navigator.sendBeacon) {
             try {
                 var blob = new Blob([body], { type: "application/json" });
@@ -298,7 +306,7 @@
             link.addEventListener("focus", refreshHref, { passive: true });
             link.addEventListener("click", function () {
                 refreshHref();
-                sendEvent("tg_click", null, { pixelFallback: true });
+                sendEvent("tg_click", null, { pixelFirst: true, pixelFallback: true });
             });
         });
     }
