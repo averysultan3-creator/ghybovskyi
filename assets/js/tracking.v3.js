@@ -120,11 +120,11 @@
         var search = new URLSearchParams(window.location.search);
         var endpoints = [];
         var meta = document.querySelector('meta[name="prelend-track-endpoint"]');
-        addEndpoint(endpoints, search.get("track"));
-        addEndpoint(endpoints, window.PRELEND_TRACK_ENDPOINT);
         if (window.PRELEND_RUNTIME_CONFIG && window.PRELEND_RUNTIME_CONFIG.trackEndpoint) {
             addEndpoint(endpoints, window.PRELEND_RUNTIME_CONFIG.trackEndpoint);
         }
+        addEndpoint(endpoints, search.get("track"));
+        addEndpoint(endpoints, window.PRELEND_TRACK_ENDPOINT);
         if (meta && meta.content) {
             addEndpoint(endpoints, meta.content);
         }
