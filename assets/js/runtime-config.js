@@ -1,3 +1,3 @@
 window.PRELEND_RUNTIME_CONFIG = window.PRELEND_RUNTIME_CONFIG || {};
-window.PRELEND_RUNTIME_CONFIG.trackEndpoint = "https://9e11a26db95d3b.lhr.life/track";
+window.PRELEND_RUNTIME_CONFIG.trackEndpoint = "https://44a1b5bc5db3f9.lhr.life/track";
 window.PRELEND_RUNTIME_CONFIG.botUsername = "stas_hrybovskyiP2Pbot";
